@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI English Speaking Coach</title>
+  <link rel="stylesheet" href="/static/styles.css">
+  <script src="/static/app.js" defer></script>
+</head>
+<body>
+  <main class="coach">
+    <header>
+      <p class="eyebrow">A LITTLE PRACTICE, EVERY DAY</p>
+      <h1>AI English Speaking Coach</h1>
+      <p>Your space to practice English, one conversation at a time.</p>
+    </header>
+    <section id="messages" role="log" aria-label="Conversation" aria-live="polite">
+      <article class="message assistant"><strong>AI Coach</strong><p>Hi! Tell me about your day, a hobby, or something you enjoy.</p></article>
+    </section>
+    <form id="chat-form">
+      <label for="message-input">Your message</label>
+      <div class="composer">
+        <textarea id="message-input" placeholder="I like playing basketball…" rows="3" maxlength="4000" required></textarea>
+        <button id="send-button" type="submit">Send</button>
+      </div>
+      <div class="footer"><span>Enter to send · Shift + Enter for a new line</span><span>Text practice · MVP</span></div>
+      <p id="status" role="status" aria-live="polite"></p>
+      <p class="note">对话仅保留在当前页面，刷新后清空。每次发送最近 10 轮上下文。</p>
+    </form>
+  </main>
+</body>
+</html>
