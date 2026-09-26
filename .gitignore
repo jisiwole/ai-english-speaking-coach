@@ -218,3 +218,9 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Local editor settings may contain machine-specific interpreter paths.
+.vscode/
+
+# Local Code Runner output check, not an application test.
+/tests/test.py

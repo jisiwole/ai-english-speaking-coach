@@ -12,6 +12,10 @@ header > p:last-child { color: #68756d; line-height: 1.6; }
 .user { background: #246747; color: white; align-self: flex-end; }
 .message strong { font-size: 12px; }
 .message p { margin: 7px 0 0; line-height: 1.65; white-space: pre-wrap; }
+.feedback-card { margin-top: 16px; padding: 14px 16px; background: #fffaf0; border: 1px solid #e5d7b2; border-left: 3px solid #bb9344; border-radius: 10px; }
+.feedback-card h2 { font-size: 12px; color: #765b27; margin: 14px 0 0; }
+.feedback-card h2:first-child { margin-top: 0; }
+.feedback-card p { font-size: 14px; color: #433d30; }
 form { border-top: 1px solid #e5ebe3; padding: 22px 32px; }
 label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 10px; }
 .composer { display: flex; gap: 12px; align-items: stretch; }

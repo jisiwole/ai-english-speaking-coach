@@ -19,6 +19,30 @@ function addMessage(role, content) {
   return article;
 }
 
+function addFeedback(article, feedback) {
+  if (!feedback || feedback.has_error !== true) return;
+  const fields = ["original", "corrected"];
+  if (!fields.every((field) => typeof feedback[field] === "string" && feedback[field].trim())) return;
+  const card = document.createElement("section");
+  card.className = "feedback-card";
+  card.setAttribute("aria-label", "Grammar correction and natural expression");
+  const sections = [
+    ["Correction", `${feedback.original} → ${feedback.corrected}`],
+    ["Why", feedback.explanation],
+    ["Natural Expression", feedback.natural_expression],
+  ];
+  for (const [title, content] of sections) {
+    if (typeof content !== "string" || !content.trim()) continue;
+    const heading = document.createElement("h2");
+    heading.textContent = title;
+    const text = document.createElement("p");
+    text.textContent = content;
+    card.append(heading, text);
+  }
+  article.append(card);
+  messages.scrollTop = messages.scrollHeight;
+}
+
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
   const content = input.value.trim();
@@ -38,13 +62,14 @@ form.addEventListener("submit", async (event) => {
     });
     const data = await response.json();
     if (!response.ok) {
-      throw new Error(typeof data.detail === "string" ? data.detail : "消息格式不正确，请缩短内容后重试。");
+      throw new Error(typeof data?.detail === "string" ? data.detail : "消息格式不正确，请缩短内容后重试。");
     }
-    if (typeof data.reply !== "string" || !data.reply.trim()) {
+    if (typeof data?.reply !== "string" || !data.reply.trim()) {
       throw new Error("AI 没有返回文字，请重试。");
     }
     history = [...history, userMessage, { role: "assistant", content: data.reply }].slice(-20);
-    addMessage("assistant", data.reply);
+    const assistant = addMessage("assistant", data.reply);
+    addFeedback(assistant, data.feedback);
     input.value = "";
     status.textContent = "";
   } catch (error) {
