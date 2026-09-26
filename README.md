@@ -9,6 +9,8 @@
 ## 当前功能
 
 - 输入英文，点击 Send 或按 Enter 发送（Shift + Enter 换行）。
+- 可选择日常聊天、旅行英语或面试练习主题；切换主题会改变 AI 的对话引导。
+- 点击 New conversation 清空当前页面的消息与多轮上下文，保留所选主题并重新开始。
 - 区分 User / AI Coach 消息，AI 简短回复并鼓励继续表达。
 - Grammar Correction + Natural Expression：只针对明显语法或表达错误，在 AI 回复下显示原句、修正句、简短解释和不改变原意的自然表达。正确句子不强行纠错、不显示空卡片。
 - 多轮上下文：每次发送最近 10 轮完整对话和当前问题。
@@ -20,7 +22,7 @@
 
 Python 3.10+、FastAPI、OpenAI Python SDK、python-dotenv、原生 HTML / CSS / JavaScript。
 
-浏览器 → POST /chat → FastAPI → DeepSeek Chat Completions API → 显示回复。
+浏览器选择主题并发送对话 → POST /chat → FastAPI 组合主题提示词 → DeepSeek Chat Completions API → 显示回复和纠错反馈。
 
 FastAPI 同时提供前端页面，只启动一个服务即可，不需要 Node.js 或前端构建工具。API Key 仅由后端使用。保留 OpenAI Python SDK，通过兼容接口调用 DeepSeek，`base_url` 固定为 `https://api.deepseek.com`。
 
@@ -105,7 +107,7 @@ VS Code 的解释器和 Code Runner 属于本机编辑器设置，未包含在�
 `POST /chat` 请求示例：
 
 ```json
-{"messages": [{"role": "user", "content": "I like playing basketball."}]}
+{"topic": "daily", "messages": [{"role": "user", "content": "I like playing basketball."}]}
 ```
 
 成功返回结构化 JSON，例如：
@@ -142,7 +144,7 @@ VS Code 的解释器和 Code Runner 属于本机编辑器设置，未包含在�
 
 日志不打印 API Key、请求头、原始响应、聊天内容或异常原文。DeepSeek 文档规定 `message.content` 为字符串或 null；`reasoning_content` 是独立的思考内容，不会当作聊天回复显示。官方说明 JSON 模式偶尔可能返回空 content，但应结合实际日志定位，不能仅凭 502 判断原因。
 
-继续聊天时仅把之前的 user / assistant 正常对话一起传入，不发送反馈卡片；必须交替排列，以 user 开头并结尾。只纠正最新用户消息，系统提示词由后端设置，前端不能传入 system 角色。
+`topic` 可选值为 `daily`、`travel`、`interview`，不传时使用 `daily`。继续聊天时仅把之前的 user / assistant 正常对话一起传入，不发送反馈卡片；必须交替排列，以 user 开头并结尾。只纠正最新用户消息，主题指令和系统提示词由后端设置，前端不能传入 system 角色。
 
 ## 基础检查
 

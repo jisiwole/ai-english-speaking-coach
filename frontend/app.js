@@ -1,10 +1,25 @@
 const form = document.querySelector("#chat-form");
 const input = document.querySelector("#message-input");
+const topicSelect = document.querySelector("#topic-select");
+const newChatButton = document.querySelector("#new-chat-button");
 const button = document.querySelector("#send-button");
 const messages = document.querySelector("#messages");
 const status = document.querySelector("#status");
 let history = [];
 let sending = false;
+
+function startNewConversation() {
+  if (sending) return;
+  history = [];
+  messages.replaceChildren();
+  addMessage("assistant", "Hi! Tell me about your day, a hobby, or something you enjoy.");
+  input.value = "";
+  status.className = "";
+  status.textContent = "";
+  input.focus();
+}
+
+newChatButton.addEventListener("click", startNewConversation);
 
 function addMessage(role, content) {
   const article = document.createElement("article");
@@ -50,6 +65,8 @@ form.addEventListener("submit", async (event) => {
   sending = true;
   button.disabled = true;
   input.disabled = true;
+  topicSelect.disabled = true;
+  newChatButton.disabled = true;
   status.className = "";
   status.textContent = "AI is thinking…";
   const userMessage = { role: "user", content };
@@ -58,7 +75,7 @@ form.addEventListener("submit", async (event) => {
     const response = await fetch("/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ messages: [...history.slice(-20), userMessage] }),
+      body: JSON.stringify({ messages: [...history.slice(-20), userMessage], topic: topicSelect.value }),
     });
     const data = await response.json();
     if (!response.ok) {
@@ -81,6 +98,8 @@ form.addEventListener("submit", async (event) => {
     sending = false;
     button.disabled = false;
     input.disabled = false;
+    topicSelect.disabled = false;
+    newChatButton.disabled = false;
     input.focus();
   }
 });

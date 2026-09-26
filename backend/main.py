@@ -60,6 +60,7 @@ class Message(BaseModel):
 
 class ChatRequest(BaseModel):
     messages: list[Message] = Field(min_length=1, max_length=21)
+    topic: Literal["daily", "travel", "interview"] = "daily"
 
     @model_validator(mode="after")
     def validate_turns(self):
@@ -95,6 +96,25 @@ class ChatResponse(BaseModel):
     model_config = ConfigDict(strict=True, str_strip_whitespace=True)
     reply: str = Field(min_length=1, max_length=4000)
     feedback: Feedback = Field(default_factory=Feedback)
+
+
+TOPIC_INSTRUCTIONS = {
+    "daily": "Practice everyday conversation about routines, hobbies, food, and free time. Keep it relaxed and ask natural follow-up questions.",
+    "travel": "Practice practical travel English such as transport, hotels, restaurants, and asking for directions. Use realistic situations and guide the learner naturally.",
+    "interview": "Practice job interviews. Ask one realistic interview question at a time, listen to the answer, and ask a relevant follow-up. Keep the tone supportive.",
+}
+
+
+def prompt_for_topic(topic: str, *, plain_text: bool = False) -> str:
+    topic_prompt = f"Conversation topic: {TOPIC_INSTRUCTIONS[topic]}"
+    if plain_text:
+        return (
+            "You are a friendly English speaking coach. Reply in plain English, "
+            "not JSON. Respond naturally in 1–3 sentences and ask one follow-up "
+            "question. Do not provide corrections or scores in this reply.\n\n"
+            + topic_prompt
+        )
+    return f"{SYSTEM_PROMPT}\n\n{topic_prompt}"
 
 
 def parse_model_content(content: str, original: str) -> ChatResponse | None:
@@ -196,11 +216,7 @@ async def chat(body: ChatRequest):
             timeout=30.0, max_retries=0,
         ) as client:
             for attempt in (1, 2):
-                prompt = SYSTEM_PROMPT if attempt == 1 else (
-                    "You are a friendly English speaking coach. Reply in plain English, "
-                    "not JSON. Respond naturally in 1–3 sentences and ask one follow-up "
-                    "question. Do not provide corrections or scores in this reply."
-                )
+                prompt = prompt_for_topic(body.topic, plain_text=attempt == 2)
                 options = {"response_format": {"type": "json_object"}} if attempt == 1 else {}
                 response = await client.chat.completions.create(
                     model="deepseek-flash",

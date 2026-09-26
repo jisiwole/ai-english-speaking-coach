@@ -18,6 +18,11 @@ header > p:last-child { color: #68756d; line-height: 1.6; }
 .feedback-card p { font-size: 14px; color: #433d30; }
 form { border-top: 1px solid #e5ebe3; padding: 22px 32px; }
 label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 10px; }
+select { display: block; width: 100%; max-width: 320px; margin-bottom: 18px; padding: 10px 12px; color: #22352f; background: #fff; border: 1px solid #c7d3c8; border-radius: 10px; font: inherit; }
+select:disabled { opacity: .65; }
+.topic-controls { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 0 12px; }
+.secondary-button { min-height: 42px; padding: 0 16px; color: #246747; background: #fff; border: 1px solid #c7d3c8; }
+.secondary-button:hover { background: #f3f5f0; }
 .composer { display: flex; gap: 12px; align-items: stretch; }
 textarea { width: 100%; resize: vertical; min-height: 80px; max-height: 200px; padding: 12px; font: inherit; border: 1px solid #c7d3c8; border-radius: 10px; }
 button { background: #246747; color: white; border: 0; border-radius: 10px; padding: 0 25px; font: inherit; cursor: pointer; }

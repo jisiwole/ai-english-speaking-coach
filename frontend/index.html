@@ -18,6 +18,15 @@
       <article class="message assistant"><strong>AI Coach</strong><p>Hi! Tell me about your day, a hobby, or something you enjoy.</p></article>
     </section>
     <form id="chat-form">
+      <label for="topic-select">Conversation topic</label>
+      <div class="topic-controls">
+        <select id="topic-select">
+          <option value="daily">Everyday conversation</option>
+          <option value="travel">Travel English</option>
+          <option value="interview">Interview practice</option>
+        </select>
+        <button id="new-chat-button" class="secondary-button" type="button">New conversation</button>
+      </div>
       <label for="message-input">Your message</label>
       <div class="composer">
         <textarea id="message-input" placeholder="I like playing basketball…" rows="3" maxlength="4000" required></textarea>
@@ -25,7 +34,7 @@
       </div>
       <div class="footer"><span>Enter to send · Shift + Enter for a new line</span><span>Text practice · MVP</span></div>
       <p id="status" role="status" aria-live="polite"></p>
-      <p class="note">对话仅保留在当前页面，刷新后清空。每次发送最近 10 轮上下文。</p>
+      <p class="note">选择主题后开始练习。对话仅保留在当前页面，刷新后清空；每次发送最近 10 轮上下文。</p>
     </form>
   </main>
 </body>

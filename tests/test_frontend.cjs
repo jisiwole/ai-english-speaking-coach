@@ -10,6 +10,7 @@ class Element {
     for (const child of children) { child.parent = this; this.children.push(child); }
   }
   setAttribute() {}
+  replaceChildren(...children) { this.children = []; this.append(...children); }
   addEventListener(name, callback) { this.listeners[name] = callback; }
   focus() {}
   remove() { this.parent.children = this.parent.children.filter((child) => child !== this); }
@@ -17,8 +18,9 @@ class Element {
 
 function setup() {
   const elements = Object.fromEntries(
-    ["chat-form", "message-input", "send-button", "messages", "status"].map((id) => [`#${id}`, new Element()])
+    ["chat-form", "topic-select", "new-chat-button", "message-input", "send-button", "messages", "status"].map((id) => [`#${id}`, new Element()])
   );
+  elements["#topic-select"].value = "daily";
   const context = vm.createContext({
     document: { querySelector: (id) => elements[id], createElement: () => new Element() },
   });
