@@ -224,3 +224,6 @@ __marimo__/
 
 # Local Code Runner output check, not an application test.
 /tests/test.py
+
+# Local learning records (not public portfolio data).
+/data/

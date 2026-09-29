@@ -70,9 +70,10 @@ class ChatTests(unittest.TestCase):
         main.os.getenv.assert_called_once_with("DEEPSEEK_API_KEY", "")
         create.assert_awaited_once_with(
             model="deepseek-flash",
-            messages=[{"role": "system", "content": main.SYSTEM_PROMPT}] + self.body["messages"],
+            messages=[{"role": "system", "content": main.prompt_for_topic("daily")}] + self.body["messages"],
             extra_body={"thinking": {"type": "disabled"}},
             response_format={"type": "json_object"},
+            tools=[main.SAVE_MISTAKE_TOOL], tool_choice="auto",
         )
 
     def test_clear_error_feedback(self):

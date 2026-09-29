@@ -16,6 +16,7 @@
 - 多轮上下文：每次发送最近 10 轮完整对话和当前问题。
 - 发送期间防止重复提交，失败时保留输入供重试。
 - 对话仅保存在当前页面，刷新清空，没有数据库或长期 Memory。
+- 原生 Tool Calling：模型发现最新一句的明确错误时，可以调用 `save_mistake`，将原句、修正句和错误类型保存到本地 `data/mistakes.json`。此记录不会随页面刷新清空，也不会自动加入后续对话。
 - 单条输入最多 4000 字符。
 
 ## 技术栈与流程
@@ -34,12 +35,16 @@ FastAPI 同时提供前端页面，只启动一个服务即可，不需要 Node.
 backend/
   __init__.py       Python 包标记
   main.py           页面路由、输入校验、陪练提示词、LLM 调用
+  tools.py          工具定义、参数校验、执行工具、保存本地 JSON
+data/
+  mistakes.json     首次成功保存时自动创建；学习记录不提交 Git
 frontend/
   index.html        聊天页面
   styles.css        页面样式与手机布局
   app.js            请求接口、显示消息、管理上下文
 tests/
   test_chat.py      不使用真实 Key 的接口测试
+  test_agent.py     工具调用闭环、参数错误、存储失败、重复保存等测试
   test_frontend.cjs 前端反馈展示和多轮聊天逻辑测试（可选 Node.js）
 .env.example       环境变量模板，Key 留空
 .gitignore         忽略密钥、虚拟环境和缓存
@@ -146,7 +151,40 @@ VS Code 的解释器和 Code Runner 属于本机编辑器设置，未包含在�
 
 `topic` 可选值为 `daily`、`travel`、`interview`，不传时使用 `daily`。继续聊天时仅把之前的 user / assistant 正常对话一起传入，不发送反馈卡片；必须交替排列，以 user 开头并结尾。只纠正最新用户消息，主题指令和系统提示词由后端设置，前端不能传入 system 角色。
 
-## 基础检查
+## 最小 Agent：save_mistake
+
+使用 [DeepSeek 官方 Tool Calls 协议](https://api-docs.deepseek.com/guides/tool_calls/)，仍然通过 OpenAI Python SDK 调用现有模型，不依赖 LangChain。
+
+一次请求的流程：
+
+1. 前端发送最新一句和已有对话；后端添加主题及陪练提示词。
+2. 后端在第一次 API 请求中传入 `tools=[SAVE_MISTAKE_TOOL]`、`tool_choice="auto"`。模型自行判断是否需要调用工具；Python 不根据关键词假装模型决策。
+3. 如果模型返回 `message.tool_calls`，其中包含函数名和 JSON 参数；此时模型没有直接执行 Python。
+4. `main.py` 调用 `tools.py` 中的 `execute_tool()`。它仅允许 `save_mistake`，检查参数及原句是否匹配最新输入，然后调用 `save_mistake()` 写入 JSON。
+5. 后端把原来的 assistant 工具调用消息加入本轮上下文，再追加 `role="tool"` 的消息。通过 `tool_call_id` 对应调用，`content` 是执行结果，例如 `{"ok":true,"saved":true}`。
+6. 后端把这些消息再次发送给模型，取得正常回复和纠错反馈。前端仍然只收到原有的 `reply` / `feedback`，不显示工具内部过程。
+
+本版最多执行一轮工具、保存一条记录；后续生成和普通文本 fallback 不再提供工具，因此不会无限循环。没有工具调用时仍然直接返回聊天回复。模型判断不是确定性规则，离线测试验证的是程序行为。
+
+保存内容示例：
+
+```json
+[
+  {
+    "original": "I go to school yesterday.",
+    "corrected": "I went to school yesterday.",
+    "error_type": "past tense"
+  }
+]
+```
+
+相同的三个字段不会重复写入。文件通过临时文件替换完成写入，单进程内使用锁避免并发覆盖；本地 MVP 请使用默认单进程启动，不要添加 `--workers`。所有本地使用者共用该文件，没有用户账户或数据库。文件损坏或写入失败时保留原文件，将安全错误结果交给模型，仍继续聊天；日志只输出状态，不输出参数和密钥。若后续模型请求失败，已经保存的记录仍然保留。
+
+只保存上述三个学习字段，不保存环境配置、完整对话或工具原始响应。已加入当前 API Key 和常见凭据标记检查，但这不是通用个人信息识别器，请仅使用不含隐私的练习句子。`data/` 和 `.env` 均被 Git 忽略，学习记录不通过网页提供。清空网页对话不会删除记录；可在停止服务后自行删除 `data/mistakes.json`，下一次保存会重新创建。
+
+实际验证：重启服务后，分别发送 `I go to school yesterday.` 和 `I went to school yesterday.`。前一句应触发纠错并保存记录；后一句应正常聊天，不新增记录。可在本地打开 `data/mistakes.json` 检查，Terminal 中 `coach stage=tool` 表示实际执行了工具。
+
+## 基础检查命令
 
 ```powershell
 .\.venv\Scripts\python.exe -m pip install httpx
@@ -173,4 +211,4 @@ node --test tests/test_frontend.cjs
 - 模型请求失败：检查 DeepSeek 服务状态和账户权限，并对照官方模型列表确认 `deepseek-flash` 可用。
 - 8000 端口被占用：启动命令改用 `--port 8001`，浏览器也改用对应端口。
 
-第一版没有登录、数据库、长期 Memory、Tool Calling、LangChain、LangGraph、RAG、语音识别、TTS、评分、个性化训练、React、Next.js 或 Docker。
+当前版本已有一个原生 Tool Calling 工具；没有登录、数据库、长期 Memory、LangChain、LangGraph、RAG、语音识别、TTS、评分、个性化训练、React、Next.js 或 Docker。
